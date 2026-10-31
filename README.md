@@ -7,8 +7,8 @@ are stable. Ubuntu/Debian, x86-64, run as root. Needs internet. Secure Boot must
 ## How to run (seller)
 
 ```bash
-git clone https://github.com/REPO_PLACEHOLDER.git
-cd REPO_NAME_PLACEHOLDER
+git clone https://github.com/sooyao33/cmptester.git
+cd cmptester
 sudo ./run.sh 4          # 4 = soak hours per card (all cards run in parallel); default 4
 ```
 
@@ -29,7 +29,7 @@ If a reboot is needed first (e.g. the old `nouveau` driver is in use) it reboots
 ## Details
 
 Unlock the seller's CMP 170HX cards and prove, with measurements and logs, that the unlock works
-and the cards are stable. Every check was validated on qwenian's two known-good cards (2026-10-31),
+and the cards are stable. Every check was validated on two known-good unlocked cards (2026-10-31),
 including deliberate fault injection: the detectors must catch planted faults before a clean
 result means anything. Reference numbers are in `qwenian-ref/`.
 
@@ -39,7 +39,7 @@ CUDA 13.3 (static runtime; needs the 610.x driver, which stage 1 installs). Sour
 | Stage | Command | Changes the box? | Time |
 |---|---|---|---|
 | 0 recon | `sudo ./00-recon.sh` | no (read-only) | 10 s |
-| 1 unlock | `sudo ./01-unlock.sh` | yes: build tools, nvidia-open 610.43.03, cmpunlocker 2c7e2ec (`--no-passthrough --no-iommu`) | 10-20 min |
+| 1 unlock | `sudo ./01-unlock.sh` | yes: build tools, nvidia-open 610.43.03 (or the newest cmpunlocker supports), latest cmpunlocker (`--no-passthrough --no-iommu`) | 10-20 min |
 | -- | **COLD power cycle** (`shutdown -h now`, then the seller powers it on) | | |
 | 2 verify | `sudo ./02-verify-unlock.sh` | no | ~5 min |
 | 3 self-test | `sudo ./03-selftest.sh` | no | ~5 min |
