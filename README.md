@@ -31,7 +31,7 @@ If a reboot is needed first (e.g. the old `nouveau` driver is in use) it reboots
 Unlock the seller's CMP 170HX cards and prove, with measurements and logs, that the unlock works
 and the cards are stable. Every check was validated on two known-good unlocked cards (2026-10-31),
 including deliberate fault injection: the detectors must catch planted faults before a clean
-result means anything. Reference numbers are in `qwenian-ref/`.
+result means anything.
 
 Binaries are prebuilt for sm_80 with
 CUDA 13.3 (static runtime; needs the 610.x driver, which stage 1 installs). Sources are in `src/`.
@@ -55,7 +55,7 @@ CUDA 13.3 (static runtime; needs the 610.x driver, which stage 1 installs). Sour
 | Checker can see faults | `--inject` plants flips below and above 8 GiB | exactly 2 caught |
 | All SMs unlocked | CUDA SM count, FP32 FMA throughput | 74 SMs, >= 12.0 TFLOPS (qwenian 13.1) |
 | HBM at full speed | copy kernel bandwidth | >= 1100 GB/s (qwenian 1195-1221) |
-| Tensor cores correct | FP16 WMMA matmul on exact integers vs independent CUDA-core matmul, all 16.7M elements x 5 runs, + CPU spot checks | bit-exact (tested on qwenian; see qwenian-ref) |
+| Tensor cores correct | FP16 WMMA matmul on exact integers vs independent CUDA-core matmul, all 16.7M elements x 5 runs, + CPU spot checks | bit-exact, >= 10 TFLOPS fp16 (reference 12.3 with this simple kernel) |
 | Detectors work on THIS box | gpuqual `--self-test` (soft flip, stuck cell, compute SDC every cycle), vramcheck `--inject` | every planted fault classified correctly |
 | Stable over time | gpuqual harness: golden recompute, moving inversions, RMW hammer, random scatter, ALU known-answer soak, retention hold at thermal ceiling; Xid + PCIe AER watch; 30 s health log incl. ECC counters | report verdict not NO-GO; 0 mismatches; 0 Xid; ECC counters unchanged |
 
