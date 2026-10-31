@@ -67,9 +67,11 @@ Soak length: one full gpuqual cycle is 3.3 h at scale 1. Shorter runs are time-c
 phase (including the retention hold) still runs; longer is stronger evidence. Thermal halt is 85 C
 GPU / 92 C HBM and the harness never touches power limits (it records the limit it found).
 
-Safety: stage 1 refuses on qwenian, refuses with Secure Boot on, and stops for a human decision if a
-different NVIDIA driver is installed (`REPLACE_DRIVER=1` to replace it). It never edits GRUB.
-After a failed driver load, never warm-reboot: power-cycle (a warm reboot wedged qwenian).
+Safety: stage 1 refuses with Secure Boot on and never edits GRUB/kernel cmdline (`--no-iommu`) or
+sets up VM passthrough (`--no-passthrough`). An existing unsupported NVIDIA driver is removed
+automatically and replaced. The stock driver is kept busy during the unlock install so the patched
+module is not hot-swapped; the cold power-off then brings the cards up on the patched driver.
+After a failed driver load, never warm-reboot: power-cycle (a warm reboot wedged our reference box).
 
 Undo on the seller box: `cd /opt/cmpunlocker && sudo ./remove.sh --yes`, then
 `sudo nvidia-uninstall` if they want the driver gone too, then reboot.
