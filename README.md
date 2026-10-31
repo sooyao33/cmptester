@@ -1,77 +1,97 @@
-# CMP 170HX unlock + stability test
+# CMP 170HX 解锁 + 稳定性测试
 
-Unlocks NVIDIA CMP 170HX cards with [cmpunlocker](https://github.com/amoghmunikote/cmpunlocker)
-(latest version) and then proves, with measurements and logs, that the unlock works and the cards
-are stable. Ubuntu/Debian, x86-64, run as root. Needs internet. Secure Boot must be OFF.
+使用 [cmpunlocker](https://github.com/amoghmunikote/cmpunlocker)（最新版本）解锁 NVIDIA CMP 170HX 显卡，
+然后通过实际测量和日志证明解锁成功、显卡运行稳定。
 
-## How to run (seller)
+**要求：** Ubuntu/Debian 系统，x86-64，需要 root 权限（sudo），需要联网，**BIOS 中的安全启动（Secure Boot）必须关闭**。
+
+(English version: [README.en.md](README.en.md))
+
+## 使用方法（卖家）
+
+在终端中依次输入以下三条命令：
 
 ```bash
 git clone https://github.com/sooyao33/cmptester.git
 cd cmptester
-sudo ./run.sh 4          # 4 = soak hours per card (all cards run in parallel); default 4
+sudo ./run.sh 4
 ```
 
-1. It installs the build tools, the NVIDIA open driver and the latest cmpunlocker (10-20 min).
-   Stop any miner or other GPU program first.
-2. **The machine powers itself OFF** (the unlock needs a cold boot). **Turn it back on with the power
-   button.** If it has not switched off after 3 minutes, hold the power button for 10 seconds.
-3. After boot everything continues by itself: unlock check (~5 min), error-detector self-test
-   (~5 min), stability soak (the hours you chose), report.
-4. When finished, send back the file **`~/cmp-test-results-<hostname>.tar.gz`** (also in `/root`).
+最后的数字 `4` 表示每张卡的稳定性测试时长（小时）。所有显卡同时测试。不填则默认 4 小时。
 
-Check progress any time: `sudo /opt/cmp-test/run.sh status` (or `... log` to follow live).
-Closing the terminal does not stop it (it runs as the `cmp-test` systemd service).
-If a reboot is needed first (e.g. the old `nouveau` driver is in use) it reboots and continues by itself.
+**开始前：** 请先关闭挖矿程序或其他正在使用显卡的程序。
+
+运行后会自动进行以下步骤：
+
+1. **安装（约 10–20 分钟）：** 自动安装编译工具、NVIDIA 开源驱动和最新版 cmpunlocker。
+2. **电脑会自动关机**（解锁需要一次完全断电的冷启动）。
+   **关机后，请按电源键重新开机。**
+   如果 3 分钟后还没有关机，请长按电源键 10 秒强制关机，然后再开机。
+3. **开机后全部自动继续，无需任何操作：**
+   - 解锁验证（约 5 分钟）
+   - 错误检测器自检（约 5 分钟）
+   - 稳定性测试（您选择的小时数）
+   - 生成测试报告
+4. **完成后，请把这个文件发回给我们：**
+   **`~/cmp-test-results-<主机名>.tar.gz`**（`/root` 目录下也有一份）
+
+### 查看进度
+
+随时可以查看进度：
+
+```bash
+sudo /opt/cmp-test/run.sh status
+```
+
+实时查看日志：`sudo /opt/cmp-test/run.sh log`（按 Ctrl-C 只是停止查看，测试会继续运行）。
+
+- 关闭终端窗口**不会**中断测试（测试以 `cmp-test` 系统服务的形式在后台运行）。
+- 如果需要先重启一次（例如旧的 `nouveau` 驱动正在使用中），电脑会自动重启并继续，无需操作。
+- 如果出现错误，屏幕上会显示"STOPPED WITH AN ERROR"，请把 `/var/log/cmp-test.log` 文件发给我们。
 
 ---
 
-## Details
+## 技术细节
 
-Unlock the seller's CMP 170HX cards and prove, with measurements and logs, that the unlock works
-and the cards are stable. Every check was validated on two known-good unlocked cards (2026-10-31),
-including deliberate fault injection: the detectors must catch planted faults before a clean
-result means anything.
+所有检测项目都已在两张已知良好的解锁卡上验证过（2026-10-31），包括故意注入错误：
+检测器必须先能抓到人为植入的错误，"无错误"的结果才有意义。
 
-Binaries are prebuilt for sm_80 with
-CUDA 13.3 (static runtime; needs the 610.x driver, which stage 1 installs). Sources are in `src/`.
+程序已为 sm_80 预编译（CUDA 13.3，静态运行库；需要 610.x 驱动，第 1 阶段会自动安装）。源代码在 `src/` 目录。
 
-| Stage | Command | Changes the box? | Time |
+| 阶段 | 命令 | 是否修改系统 | 时间 |
 |---|---|---|---|
-| 0 recon | `sudo ./00-recon.sh` | no (read-only) | 10 s |
-| 1 unlock | `sudo ./01-unlock.sh` | yes: build tools, nvidia-open 610.43.03 (or the newest cmpunlocker supports), latest cmpunlocker (`--no-passthrough --no-iommu`) | 10-20 min |
-| -- | **COLD power cycle** (`shutdown -h now`, then the seller powers it on) | | |
-| 2 verify | `sudo ./02-verify-unlock.sh` | no | ~5 min |
-| 3 self-test | `sudo ./03-selftest.sh` | no | ~5 min |
-| 4 soak | `sudo ./04-soak.sh start HOURS` / `status` / `stop` | no | HOURS |
-| 5 evidence | `sudo ./05-collect.sh` -> `out/PROOF.md` + tarball with SHA256SUMS | no | 1 min |
+| 0 信息收集 | `sudo ./00-recon.sh` | 否（只读） | 10 秒 |
+| 1 解锁 | `sudo ./01-unlock.sh` | 是：编译工具、nvidia-open 610.43.03（或 cmpunlocker 支持的最新版本）、最新 cmpunlocker（`--no-passthrough --no-iommu`） | 10–20 分钟 |
+| -- | **冷启动**（关机后由卖家按电源键开机） | | |
+| 2 验证 | `sudo ./02-verify-unlock.sh` | 否 | 约 5 分钟 |
+| 3 自检 | `sudo ./03-selftest.sh` | 否 | 约 5 分钟 |
+| 4 稳定性测试 | `sudo ./04-soak.sh start 小时数` / `status` / `stop` | 否 | 所选小时数 |
+| 5 证据汇总 | `sudo ./05-collect.sh` → `out/PROOF.md` + 带 SHA256SUMS 的压缩包 | 否 | 1 分钟 |
 
-## What is proven, and how
+`run.sh` 会自动按顺序执行以上所有阶段。
 
-| Claim | Evidence | Pass criterion (from qwenian) |
+## 证明什么，如何证明
+
+| 要证明的内容 | 证据 | 通过标准（参考卡） |
 |---|---|---|
-| Patched driver is the one running | `/sys/module/nvidia/srcversion` = built module; SEC2_DEBUG boot log; no RmInitAdapter failure | exact match |
-| Full memory is real, not just reported | cmpprobe allocates every 1 GiB chunk, writes an address-derived pattern, verifies with uncached reads, 2 passes, inverted data | >= 60 GiB, 0 bad words (qwenian: 61 GiB) |
-| Checker can see faults | `--inject` plants flips below and above 8 GiB | exactly 2 caught |
-| All SMs unlocked | CUDA SM count, FP32 FMA throughput | 74 SMs, >= 12.0 TFLOPS (qwenian 13.1) |
-| HBM at full speed | copy kernel bandwidth | >= 1100 GB/s (qwenian 1195-1221) |
-| Tensor cores correct | FP16 WMMA matmul on exact integers vs independent CUDA-core matmul, all 16.7M elements x 5 runs, + CPU spot checks | bit-exact, >= 10 TFLOPS fp16 (reference 12.3 with this simple kernel) |
-| Detectors work on THIS box | gpuqual `--self-test` (soft flip, stuck cell, compute SDC every cycle), vramcheck `--inject` | every planted fault classified correctly |
-| Stable over time | gpuqual harness: golden recompute, moving inversions, RMW hammer, random scatter, ALU known-answer soak, retention hold at thermal ceiling; Xid + PCIe AER watch; 30 s health log incl. ECC counters | report verdict not NO-GO; 0 mismatches; 0 Xid; ECC counters unchanged |
+| 运行的是解锁版驱动 | `/sys/module/nvidia/srcversion` 与编译的模块一致；SEC2_DEBUG 启动日志；无 RmInitAdapter 失败 | 完全一致 |
+| 显存容量真实存在，而不只是显示数字 | cmpprobe 分配所有 1 GiB 显存块，写入由地址生成的数据，用非缓存读取校验，2 轮（第二轮数据取反） | ≥ 60 GiB，0 个错误（参考：61 GiB） |
+| 检测程序能发现错误 | `--inject` 在 8 GiB 以下和以上各植入一个位翻转 | 恰好抓到 2 个 |
+| 所有 SM 已解锁 | CUDA SM 数量，FP32 FMA 吞吐量 | 74 个 SM，≥ 12.0 TFLOPS（参考 13.1） |
+| HBM 显存全速 | 拷贝内核带宽 | ≥ 1100 GB/s（参考 1195–1221） |
+| Tensor Core 计算正确 | 用精确整数做 FP16 WMMA 矩阵乘，与独立的 CUDA Core 矩阵乘逐元素比较（1670 万个元素 × 5 次）+ CPU 抽查 | 逐位一致，≥ 10 TFLOPS fp16（此简单内核参考值 12.3） |
+| 检测器在这台机器上有效 | gpuqual `--self-test`（每轮植入：软错误、坏单元、计算错误），vramcheck `--inject` | 每个植入的错误都被正确分类 |
+| 长时间稳定 | gpuqual 测试框架：黄金值重算校验、移动反转、读改写压力、随机散列读取、ALU 已知答案测试、高温下数据保持测试；监控 Xid 和 PCIe AER；每 30 秒记录健康数据（含 ECC 计数） | 报告结论不是 NO-GO；0 个数据错误；0 个 Xid；ECC 计数不变 |
 
-ECC note: the new unlock turns ECC on. ECC silently corrects single-bit flips, so a weak card can
-look clean to the pattern tests. That is why the sampler logs ECC counters and `05-collect.sh`
-compares them before/after: a rising corrected count is a finding even when gpuqual is clean.
+**关于 ECC：** 新版解锁会开启 ECC。ECC 会自动纠正单个位翻转，所以有问题的卡在数据测试中也可能显示正常。
+因此采样程序会记录 ECC 计数，`05-collect.sh` 会对比测试前后：即使 gpuqual 没有发现错误，ECC 纠错计数上升也算一个问题。
 
-Soak length: one full gpuqual cycle is 3.3 h at scale 1. Shorter runs are time-compressed so every
-phase (including the retention hold) still runs; longer is stronger evidence. Thermal halt is 85 C
-GPU / 92 C HBM and the harness never touches power limits (it records the limit it found).
+**测试时长：** gpuqual 完整一轮在正常速度下为 3.3 小时。较短的测试会按比例压缩时间，所有阶段（包括数据保持测试）仍会执行；
+测试时间越长，证据越有力。温度保护：GPU 85 °C / HBM 92 °C 时停止测试；测试程序从不修改功耗限制（只记录当前值）。
 
-Safety: stage 1 refuses with Secure Boot on and never edits GRUB/kernel cmdline (`--no-iommu`) or
-sets up VM passthrough (`--no-passthrough`). An existing unsupported NVIDIA driver is removed
-automatically and replaced. The stock driver is kept busy during the unlock install so the patched
-module is not hot-swapped; the cold power-off then brings the cards up on the patched driver.
-After a failed driver load, never warm-reboot: power-cycle (a warm reboot wedged our reference box).
+**安全性：** 安全启动开启时第 1 阶段会拒绝运行；不会修改 GRUB/内核启动参数（`--no-iommu`），不设置虚拟机直通（`--no-passthrough`）。
+已安装的不受支持的 NVIDIA 驱动会被自动卸载并替换。安装解锁时会让原驱动保持占用，避免热替换模块；之后的冷启动让显卡以解锁驱动启动。
+驱动加载失败后，不要热重启，要完全断电重启（热重启曾导致我们的参考机器死机）。
 
-Undo on the seller box: `cd /opt/cmpunlocker && sudo ./remove.sh --yes`, then
-`sudo nvidia-uninstall` if they want the driver gone too, then reboot.
+**恢复原状（卖家机器）：** `cd /opt/cmpunlocker && sudo ./remove.sh --yes`，
+如需同时删除驱动再执行 `sudo nvidia-uninstall`，然后重启。
