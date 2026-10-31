@@ -19,7 +19,7 @@ R headers.txt     bash -c 'ls -d /lib/modules/$(uname -r)/build && echo HEADERS_
 R kernel-nvrm.txt bash -c 'dmesg | grep -E "NVRM|nvidia|SEC2_DEBUG|AER" | tail -300'
 R xid-history.txt bash -c 'journalctl -k --no-pager 2>/dev/null | grep -E "NVRM: Xid" | tail -100'
 R sensors.txt     bash -c 'sensors 2>&1'
-R net.txt         bash -c 'for u in https://github.com https://download.nvidia.com; do curl -sS -o /dev/null -m 10 -w "%{http_code} $u\n" $u; done'
+R net.txt         bash -c 'for u in https://github.com/amoghmunikote/cmpunlocker https://download.nvidia.com/XFree86/Linux-x86_64/610.43.03/NVIDIA-Linux-x86_64-610.43.03.run; do c=$(curl -sSI -o /dev/null -m 15 -w "%{http_code}" $u); [ "$c" = 200 ] && echo "internet ok: $u" || echo "CANNOT REACH ($c): $u"; done'
 R cmpunlocker.txt bash -c 'for d in /root/cmpunlocker /opt/cmpunlocker $(find / -maxdepth 4 -type d -name cmpunlocker 2>/dev/null | head -5); do [ -d $d/.git ] && git -C $d log --oneline -3 && echo "^ $d"; done; cat /lib/modules/$(uname -r)/updates/cmpunlocker/{driver_version,card_profile,unlock_geometry,gpu_inventory} 2>&1'
 
 echo "=== RECON SUMMARY ($(stamp)) ==="

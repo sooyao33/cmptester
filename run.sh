@@ -22,6 +22,18 @@ UNIT=/etc/systemd/system/cmp-test.service
 [[ $EUID -eq 0 ]] || { echo "run with sudo:  sudo $0 $*"; exit 1; }
 state() { cat "$STATE_DIR/state" 2>/dev/null || echo none; }
 setstate() { echo "$1" > "$STATE_DIR/state"; echo "[$(date -u +%FT%TZ)] state -> $1"; }
+# follow the live log until the service stops (finished, failed, or the machine powers off)
+follow() {
+    tail -n 50 -F "$LOG" & local tp=$!
+    trap 'kill $tp 2>/dev/null; echo; echo "(stopped watching - the test keeps running. Check later: sudo $INST/run.sh status)"; exit 0' INT
+    while systemctl is-active --quiet cmp-test; do sleep 3; done
+    sleep 2; kill $tp 2>/dev/null; echo
+    case "$(state)" in
+        done)   echo "FINISHED. Send back the result file named above." ;;
+        failed) echo "STOPPED WITH AN ERROR (see the lines above). Send us the file /var/log/cmp-test.log" ;;
+        *)      echo "The test is continuing (state: $(state)). If the machine is about to power off, turn it back on afterwards." ;;
+    esac
+}
 banner() { local m="$*"; echo; echo "########## $m"; wall "cmp-test: $m" 2>/dev/null || true; echo "cmp-test: $m" > /dev/console 2>/dev/null || true; }
 
 case "${1:-start}" in
@@ -30,7 +42,7 @@ status)
     [[ "$(state)" == soak ]] && "$INST/04-soak.sh" status
     [[ "$(state)" == done ]] && { cat "$STATE_DIR/result" 2>/dev/null; }
     tail -n 15 "$LOG" 2>/dev/null; exit 0 ;;
-log) exec tail -n 50 -F "$LOG" ;;
+log) follow; exit 0 ;;
 start|[0-9]*)
     H="${1:-4}"; [[ "$H" == start ]] && H="${2:-4}"
     [[ "$H" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "HOURS must be a number"; exit 1; }
@@ -58,7 +70,7 @@ EOF
     systemctl daemon-reload && systemctl enable --now cmp-test.service
     echo "started (soak ${H} h per card). Live log below - Ctrl-C only stops watching; it keeps running."
     echo "Later:  sudo $INST/run.sh status"
-    sleep 1; exec tail -n 50 -F "$LOG" ;;
+    sleep 1; follow; exit 0 ;;
 --service) ;;   # fall through: the state machine below
 *) echo "usage: sudo $0 [HOURS] | status | log"; exit 1 ;;
 esac
