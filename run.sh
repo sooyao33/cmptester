@@ -117,7 +117,7 @@ collect)
     for d in /root "$UH"; do [[ -n "$d" && -d "$d" ]] && cp -f "$T" "$d/cmp-test-results-$(hostname).tar.gz" 2>/dev/null && chown "$U" "$d/cmp-test-results-$(hostname).tar.gz" 2>/dev/null; done
     {
       echo "RESULT FILE: ${UH:-/root}/cmp-test-results-$(hostname).tar.gz   (send this file back)"
-      grep -E '^(PASS|FAIL|WARN)' out/PROOF.md | sort | uniq -c | awk '{print "  " $2 ": " $1}' | sort -u
+      for k in PASS FAIL WARN; do echo "  $k: $(grep -c "^$k" out/PROOF.md)"; done
       grep -E '^# GPU Qualification Report' out/soak/gpu*/summary.md 2>/dev/null
     } > "$STATE_DIR/result"
     setstate done
