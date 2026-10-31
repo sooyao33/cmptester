@@ -44,7 +44,7 @@ CUDA 13.3 (static runtime; needs the 610.x driver, which stage 1 installs). Sour
 | 2 verify | `sudo ./02-verify-unlock.sh` | no | ~5 min |
 | 3 self-test | `sudo ./03-selftest.sh` | no | ~5 min |
 | 4 soak | `sudo ./04-soak.sh start HOURS` / `status` / `stop` | no | HOURS |
-| 5 evidence | `sudo ./05-collect.sh` -> `out/PROOF.md` + tarball with SHA256SUMS | no | 1 min |
+| 5 evidence | `sudo ./05-collect.sh` -> `out/PROOF.md` (per card: HBM bandwidth, FP32/FP16 TFLOPS, power draw, temps, clocks, throttle reasons) + tarball with SHA256SUMS | no | 1 min |
 
 ## What is proven, and how
 

@@ -66,7 +66,7 @@ sudo /opt/cmp-test/run.sh status
 | 2 验证 | `sudo ./02-verify-unlock.sh` | 否 | 约 5 分钟 |
 | 3 自检 | `sudo ./03-selftest.sh` | 否 | 约 5 分钟 |
 | 4 稳定性测试 | `sudo ./04-soak.sh start 小时数` / `status` / `stop` | 否 | 所选小时数 |
-| 5 证据汇总 | `sudo ./05-collect.sh` → `out/PROOF.md` + 带 SHA256SUMS 的压缩包 | 否 | 1 分钟 |
+| 5 证据汇总 | `sudo ./05-collect.sh` → `out/PROOF.md`（含每张卡的显存带宽、FP32/FP16 TFLOPS、功耗、温度、频率、降频原因）+ 带 SHA256SUMS 的压缩包 | 否 | 1 分钟 |
 
 `run.sh` 会自动按顺序执行以上所有阶段。
 
