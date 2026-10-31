@@ -17,7 +17,9 @@ case "$cmd" in
 start)
     H="${2:?usage: $0 start HOURS}"
     pgrep -f '[h]arness.py --dir .*/out/soak/gpu' >/dev/null && die "a soak is already running ($0 status)"
-    scale=$(awk -v h="$H" 'BEGIN{s = h / 3.5; if (s > 1) s = 1; if (s < 0.05) s = 0.05; printf "%.3f", s}')
+    # one full cycle = ~3.25 h at scale 1 (measured); scale so ONE cycle just exceeds the target - the harness
+    # always finishes the cycle it is in, so a cycle slightly shorter than the target would run a 2nd one
+    scale=$(awk -v h="$H" 'BEGIN{s = h / 3.15; if (s > 1) s = 1; if (s < 0.05) s = 0.05; printf "%.3f", s}')
     dur=$(awk -v h="$H" 'BEGIN{printf "%d", h * 3600}')
     say "== soak start $(stamp): ${H} h per card, scale $scale"
     if [[ ! -f "$D/xid-before.txt" ]]; then   # first start only; a restart after a reboot resumes the same run

@@ -6,23 +6,38 @@ are stable. Ubuntu/Debian, x86-64, run as root. Needs internet. Secure Boot must
 
 ## How to run (seller)
 
+**Step 1:** open a terminal, paste this, press Enter:
+
 ```bash
-git clone https://github.com/sooyao33/cmptester.git
-cd cmptester
-sudo ./run.sh 4          # 4 = soak hours per card (all cards run in parallel); default 4
+git clone https://github.com/sooyao33/cmptester.git && cd cmptester && sudo ./run.sh 1
 ```
 
-1. It installs the build tools, the NVIDIA open driver and the latest cmpunlocker (10-20 min).
-   Stop any miner or other GPU program first.
-2. **The machine powers itself OFF** (the unlock needs a cold boot). **Turn it back on with the power
-   button.** If it has not switched off after 3 minutes, hold the power button for 10 seconds.
-3. After boot everything continues by itself: unlock check (~5 min), error-detector self-test
-   (~5 min), stability soak (the hours you chose), report.
-4. When finished, send back the file **`~/cmp-test-results-<hostname>.tar.gz`** (also in `/root`).
+(`1` = 1 hour of testing. If asked for a password, type your login password.)
 
-Check progress any time: `sudo /opt/cmp-test/run.sh status` (or `... log` to follow live).
-Closing the terminal does not stop it (it runs as the `cmp-test` systemd service).
-If a reboot is needed first (e.g. the old `nouveau` driver is in use) it reboots and continues by itself.
+**Step 2:** wait about 10-20 minutes. **The computer turns itself off.**
+
+**Step 3:** **press the power button to turn it on.**
+(If it has not turned off after 3 minutes: hold the power button 10 seconds, then press it again.)
+
+**Step 4:** do nothing. Testing runs by itself after boot and takes about 1 h 15 min.
+
+**Step 5:** send us this file:
+
+```
+/root/cmp-test-results-<hostname>.tar.gz
+```
+
+(the same file is also in your home folder `~`.)
+
+### Check progress (optional)
+
+```bash
+sudo /opt/cmp-test/run.sh status
+```
+
+- It runs in the background; closing the terminal does not stop it.
+- If the computer reboots once by itself (instead of powering off), that is normal; it continues.
+- If you see "STOPPED WITH AN ERROR": send us the file `/var/log/cmp-test.log`.
 
 ---
 
@@ -63,7 +78,7 @@ ECC note: the new unlock turns ECC on. ECC silently corrects single-bit flips, s
 look clean to the pattern tests. That is why the sampler logs ECC counters and `05-collect.sh`
 compares them before/after: a rising corrected count is a finding even when gpuqual is clean.
 
-Soak length: one full gpuqual cycle is 3.3 h at scale 1. Shorter runs are time-compressed so every
+Soak length: one full gpuqual cycle is ~3.25 h at scale 1. Shorter runs are time-compressed to exactly one cycle so every
 phase (including the retention hold) still runs; longer is stronger evidence. Thermal halt is 85 C
 GPU / 92 C HBM and the harness never touches power limits (it records the limit it found).
 

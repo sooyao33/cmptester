@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CMP 170HX unlock + stability test - one command, fully automatic.
 #
-#   sudo ./run.sh [HOURS]     start (default soak 4 h per card, all cards in parallel)
+#   sudo ./run.sh [HOURS]     start (default soak 1 h per card, all cards in parallel)
 #   sudo ./run.sh status      where it is / live progress
 #   sudo ./run.sh log         follow the live log (Ctrl-C only stops watching)
 #
@@ -44,7 +44,7 @@ status)
     tail -n 15 "$LOG" 2>/dev/null; exit 0 ;;
 log) follow; exit 0 ;;
 start|[0-9]*)
-    H="${1:-4}"; [[ "$H" == start ]] && H="${2:-4}"
+    H="${1:-1}"; [[ "$H" == start ]] && H="${2:-1}"
     [[ "$H" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "HOURS must be a number"; exit 1; }
     systemctl is-active --quiet cmp-test && { echo "already running - sudo $0 status"; exit 0; }
     mkdir -p "$STATE_DIR" "$INST"
@@ -77,7 +77,7 @@ esac
 
 # ------------------------------------------------------------------ state machine (as the service)
 cd "$INST" || exit 2
-H=$(cat "$STATE_DIR/hours" 2>/dev/null || echo 4)
+H=$(cat "$STATE_DIR/hours" 2>/dev/null || echo 1)
 echo "[$(date -u +%FT%TZ)] cmp-test service up, state $(state), boot $(cat /proc/sys/kernel/random/boot_id)"
 while :; do
 case "$(state)" in
